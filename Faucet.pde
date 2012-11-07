@@ -3,14 +3,16 @@ int MAX_RATE = 100;
 class Dispenser {
   float x, y;
   String type;
+  int streamColour;
   
   Dial dial;
   Faucet faucet;
   
-  Dispenser(float x, float y, String type) {
+  Dispenser(float x, float y, String type, int streamColour) {
     this.type = type;
     this.x = x;
     this.y = y;
+    this.streamColour = streamColour;
     
     dial = new Dial(x, y-75, 25, this);
     faucet = new Faucet(x, y, 50, this);
@@ -27,6 +29,8 @@ class Dispenser {
   void drawStream(PGraphics g) {
     if (faucet.rate > 0) {
       float percent = (float) faucet.rate / MAX_RATE;
+      noStroke();
+      fill(streamColour);
       rect(x-(faucet.r*percent*.75), y, (faucet.r*percent*.75)*2, 250);
     }
   }

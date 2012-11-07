@@ -2,21 +2,49 @@ class RiceCookerScene implements Scene {
   Dispenser dispensers[] = new Dispenser[3];
   
   RiceCookerScene() {
-    dispensers[0] = new Dispenser(150, 150, "brown rice");
-    dispensers[1] = new Dispenser(300, 150, "white rice");
-    dispensers[2] = new Dispenser(450, 150, "water");
+    dispensers[0] = new Dispenser(150, 150, "brown rice", #ff873b);
+    dispensers[1] = new Dispenser(300, 150, "white rice", #FFFFFF);
+    dispensers[2] = new Dispenser(450, 150, "water", #0066ff);
   }
   
   void draw(PGraphics g) {
+    drawBowlBack(g);
+    
     for (int i = 0; i < 3; i++) {
       dispensers[i].draw(g);
     }
     
-    drawBowl(g);
+    drawBowlFront(g);
   }
   
-  void drawBowl(PGraphics g) {
-    arc(width/2, height/2, 3*width/4, 3*height/4, 0, PI);
+  int cornerPoint = 125;
+  int cornerRadius = 100;
+  int bowlHeight = 150;
+  
+  void drawBowlBack(PGraphics g) {
+    // background ellipse
+    g.noStroke();
+    g.fill(#FFFFFF);
+    g.ellipse(width/2, height-cornerPoint-bowlHeight, width-cornerPoint-cornerRadius/4, 100);
+    
+    // mush
+    g.fill(#0000FF);
+    g.ellipse(width/2, height-cornerPoint-bowlHeight+50, width-cornerPoint-cornerRadius/4, 100);
+  }
+  
+  void drawBowlFront(PGraphics g) {
+    // upper rectangle
+    g.noStroke();
+    g.fill(#FFFFFF);
+    g.rect(cornerPoint-cornerRadius/2, height-cornerPoint-bowlHeight, width-cornerPoint-cornerRadius/4, bowlHeight);
+    
+    // mush
+    g.fill(#0000FF);
+    g.ellipse(width/2, height-cornerPoint-bowlHeight+25, width-cornerPoint-cornerRadius/4, 100);
+    
+    // bottom ellipse
+    g.fill(#FFFFFF);
+    g.ellipse(width/2, height-cornerPoint, width-cornerPoint-cornerRadius/4, 100);
   }
   
   boolean onMousePressed(int x, int y) {
