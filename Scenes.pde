@@ -11,6 +11,12 @@ class RiceCookerScene implements Scene {
     for (int i = 0; i < 3; i++) {
       dispensers[i].draw(g);
     }
+    
+    drawBowl(g);
+  }
+  
+  void drawBowl(PGraphics g) {
+    arc(width/2, height/2, 3*width/4, 3*height/4, 0, PI);
   }
   
   boolean onMousePressed(int x, int y) {

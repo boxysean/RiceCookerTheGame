@@ -9,6 +9,7 @@ void setup() {
 }
 
 void draw() {
+  background(200);
   scene.draw(g);
 }
 

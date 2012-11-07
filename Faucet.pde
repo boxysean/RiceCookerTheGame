@@ -19,8 +19,16 @@ class Dispenser {
   void draw(PGraphics g) {
     dial.amount += faucet.rate;
     
+    drawStream(g);
     dial.draw(g);
     faucet.draw(g);
+  }
+  
+  void drawStream(PGraphics g) {
+    if (faucet.rate > 0) {
+      float percent = (float) faucet.rate / MAX_RATE;
+      rect(x-(faucet.r*percent*.75), y, (faucet.r*percent*.75)*2, 250);
+    }
   }
 }
 
