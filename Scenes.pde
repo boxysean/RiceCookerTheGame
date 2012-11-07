@@ -1,21 +1,21 @@
 class RiceCookerScene implements Scene {
-  Faucet[] faucets = new Faucet[3];
+  Dispenser dispensers[] = new Dispenser[3];
   
   RiceCookerScene() {
-    faucets[0] = new Faucet(100, 100, 50, "white rice");
-    faucets[1] = new Faucet(300, 100, 50, "brown rice");
-    faucets[2] = new Faucet(500, 100, 50, "water");
+    dispensers[0] = new Dispenser(150, 150, "brown rice");
+    dispensers[1] = new Dispenser(300, 150, "white rice");
+    dispensers[2] = new Dispenser(450, 150, "water");
   }
   
   void draw(PGraphics g) {
-    for (Faucet f : faucets) {
-      f.draw(g);
+    for (int i = 0; i < 3; i++) {
+      dispensers[i].draw(g);
     }
   }
   
   boolean onMousePressed(int x, int y) {
-    for (int i = 0; i < faucets.length; i++) {
-      if (faucets[i].onMousePressed(x, y)) {
+    for (int i = 0; i < dispensers.length; i++) {
+      if (dispensers[i].faucet.onMousePressed(x, y)) {
         return true;
       }
     }
@@ -24,8 +24,8 @@ class RiceCookerScene implements Scene {
   }
 
   boolean onMouseDragged(int x, int y) {
-    for (int i = 0; i < faucets.length; i++) {
-      if (faucets[i].onMouseDragged(x, y)) {
+    for (int i = 0; i < dispensers.length; i++) {
+      if (dispensers[i].faucet.onMouseDragged(x, y)) {
         return true;
       }
     }
@@ -34,8 +34,8 @@ class RiceCookerScene implements Scene {
   }
 
   boolean onMouseReleased(int x, int y) {
-    for (int i = 0; i < faucets.length; i++) {
-      if (faucets[i].onMouseReleased(x, y)) {
+    for (int i = 0; i < dispensers.length; i++) {
+      if (dispensers[i].faucet.onMouseReleased(x, y)) {
         return true;
       }
     }

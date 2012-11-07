@@ -5,6 +5,7 @@ Scene scene = new RiceCookerScene();
 
 void setup() {
   size(600, 600);
+  smooth();
 }
 
 void draw() {
@@ -20,7 +21,7 @@ void mouseDragged() {
 }
 
 void mouseReleased() {
-  scene.onMouseDragged(mouseX, mouseY);
+  scene.onMouseReleased(mouseX, mouseY);
 }
 
 /*******************************************************/
