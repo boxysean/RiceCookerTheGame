@@ -6,6 +6,15 @@ Scene scene = new RiceCookerScene();
 void setup() {
   size(600, 600);
   smooth();
+  
+  scene.setup();
+  
+  reservoirImage = loadImage("images/reservoir.png");
+  tapImage = loadImage("images/tap.png");
+  
+  brownRiceImage = loadImage("images/ricegrain_brown.jpg");
+  whiteRiceImage = loadImage("images/ricegrain_white.jpg");
+  waterImage = loadImage("images/ricegrain_brown.jpg");
 }
 
 void draw() {
@@ -15,6 +24,7 @@ void draw() {
 
 void mousePressed() {
   scene.onMousePressed(mouseX, mouseY);
+  println(mouseX + ", " + mouseY);
 }
 
 void mouseDragged() {
@@ -24,9 +34,4 @@ void mouseDragged() {
 void mouseReleased() {
   scene.onMouseReleased(mouseX, mouseY);
 }
-
-/*******************************************************/
-/* Rice cooker scene                                   */
-/*******************************************************/
-
 
