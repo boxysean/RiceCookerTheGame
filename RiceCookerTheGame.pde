@@ -1,20 +1,21 @@
 int SCENE_RICE_COOKER = 0;
 int SCENE_BUTTON_MENU = 1;
 
-Scene scene = new RiceCookerScene();
+Scene scene;
 
 void setup() {
-  size(600, 600);
+  size(600, 800);
   smooth();
   
-  scene.setup();
-  
   reservoirImage = loadImage("images/reservoir.png");
+  reservoirShadowImage = loadImage("images/reservoirShadow.png");
   tapImage = loadImage("images/tap.png");
   
   brownRiceImage = loadImage("images/ricegrain_brown.jpg");
   whiteRiceImage = loadImage("images/ricegrain_white.jpg");
   waterImage = loadImage("images/ricegrain_brown.jpg");
+  
+  scene = new RiceCookerScene();
 }
 
 void draw() {

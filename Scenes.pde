@@ -1,16 +1,20 @@
 class RiceCookerScene implements Scene {
   Dispenser dispensers[] = new Dispenser[3];
   
+  Burner burner = new Burner();
+  
   PImage bowlBackImage;
   PImage bowlFrontImage;
   
-  RiceCookerScene() {
-    dispensers[0] = new Dispenser(350, 150, "water", #0066ff, 0.8, 400, 164, 40, 40, waterImage);
-    dispensers[1] = new Dispenser(250, 200, "white rice", #FFFFFF, 0.9, 309, 215, 45, 45, whiteRiceImage);
-    dispensers[2] = new Dispenser(150, 250, "brown rice", #ff873b, 1.0, 215, 269, 50, 50, brownRiceImage);
-  }
+  boolean on = false;
+  boolean cook = false;
+  boolean keepWarm = false;
   
-  void setup() {
+  RiceCookerScene() {
+    dispensers[0] = new Dispenser(350, 150, "water", #0066ff, 700, 0.8, 400, 164, 40, 40, waterImage);
+    dispensers[1] = new Dispenser(250, 200, "white rice", #FFFFFF, 500, 0.9, 309, 215, 45, 45, whiteRiceImage);
+    dispensers[2] = new Dispenser(150, 250, "brown rice", #ff873b, 300, 1.0, 215, 269, 50, 50, brownRiceImage);
+    
     bowlBackImage = loadImage("images/bowl-back.png");
     bowlFrontImage = loadImage("images/bowl-front.png");
   }
@@ -23,11 +27,8 @@ class RiceCookerScene implements Scene {
     }
     
     drawBowlFront(g);
+    burner.draw(g);
   }
-  
-  int cornerPoint = 125;
-  int cornerRadius = 100;
-  int bowlHeight = 150;
   
   void drawBowlBack(PGraphics g) {
     g.pushMatrix();
@@ -58,6 +59,10 @@ class RiceCookerScene implements Scene {
       }
     }
     
+    if (burner.onMousePressed(x, y)) {
+      return true;
+    }
+    
     return false;
   }
 
@@ -68,6 +73,10 @@ class RiceCookerScene implements Scene {
       }
     }
     
+    if (burner.onMouseDragged(x, y)) {
+      return true;
+    }
+    
     return false;
   }
 
@@ -76,6 +85,10 @@ class RiceCookerScene implements Scene {
       if (dispensers[i].faucet.onMouseReleased(x, y)) {
         return true;
       }
+    }
+    
+    if (burner.onMouseReleased(x, y)) {
+      return true;
     }
     
     return false;

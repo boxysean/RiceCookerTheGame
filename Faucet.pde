@@ -1,41 +1,56 @@
 int MAX_RATE = 100;
+int MAX_REMAINING = 5000;
 
 PImage reservoirImage;
+PImage reservoirShadowImage;
 PImage tapImage;
 
 PImage brownRiceImage, whiteRiceImage, waterImage;
+
+PImage keepWarmTextImage;
+PImage cookTextImage;
+PImage onoffTextImage;
 
 class Dispenser {
   float x, y;
   String type;
   int streamColour;
   float scaleFactor;
-  PImage contents;
+  PImage contentsImage;
   
-  Dial dial;
   Faucet faucet;
   
-  Dispenser(float x, float y, String type, int streamColour, float scaleFactor, int px, int py, int pw, int ph, PImage contents) {
+  int remaining = MAX_REMAINING;
+  int amount = 0;
+  
+  Dispenser(float x, float y, String type, int streamColour, int streamHeight, float scaleFactor, int px, int py, int pw, int ph, PImage contentsImage) {
     this.type = type;
     this.x = x;
     this.y = y;
-    this.streamColour = streamColour;
     this.scaleFactor = scaleFactor;
-    this.contents = contents;
+    this.contentsImage = contentsImage;
     
-    dial = new Dial(x, y-75, 25, this);
-    faucet = new Faucet(x, y, 50, this, px, py, pw, ph);
+    faucet = new Faucet(x, y, 50, this, streamColour, streamHeight, px, py, pw, ph);
+    
+    remask();
   }
   
   void draw(PGraphics g) {
-    dial.amount += faucet.rate;
-    
-    drawStream(g);
+    if (faucet.rate > 0) {
+      int prevAmount = amount;
+      amount += faucet.rate;
+      remaining = max(remaining - faucet.rate, 0);
+      if (prevAmount != amount) {
+        remask();
+      }
+    }
     
     g.pushMatrix();
     
     g.translate(x, y);
     g.scale(scaleFactor * 0.5);
+    
+    drawContents(g);
     
     g.image(reservoirImage, -reservoirImage.width/2, -reservoirImage.height/2);
     g.image(tapImage, 80, 80);
@@ -45,13 +60,21 @@ class Dispenser {
     g.popMatrix();
   }
   
-  void drawStream(PGraphics g) {
-    if (faucet.rate > 0) {
-      float percent = (float) faucet.rate / MAX_RATE;
-      noStroke();
-      fill(streamColour);
-      rect(x-(faucet.r*percent*.75), y, (faucet.r*percent*.75)*2, 250);
-    }
+  void remask() {
+    pushMatrix();
+    resetMatrix();
+    PGraphics pg = createGraphics(contentsImage.width, contentsImage.height, P2D);
+    pg.background(#000000);
+    pg.image(reservoirShadowImage, 0, 0);
+    pg.fill(#000000);
+    float h = map(remaining, MAX_REMAINING, 0, 100, 465);
+    pg.rect(0, 0, contentsImage.width, h);
+    contentsImage.mask(pg);
+    popMatrix();
+  }    
+
+  void drawContents(PGraphics g) {
+    g.image(contentsImage, -reservoirImage.width/2, -reservoirImage.height/2);
   }
 }
 
@@ -59,6 +82,7 @@ class Faucet implements Clickable {
   float x, y, r;
   int rate;
   Dispenser dispenser;
+  int streamColour, streamHeight;
   
   int px, py, pw, ph;
   
@@ -66,11 +90,13 @@ class Faucet implements Clickable {
   
   boolean mouseIsPressed = false;
   
-  Faucet(float x, float y, float r, Dispenser dispenser, int px, int py, int pw, int ph) {
+  Faucet(float x, float y, float r, Dispenser dispenser, int streamColour, int streamHeight, int px, int py, int pw, int ph) {
     this.x = x;
     this.y = y;
     this.r = r;
     this.dispenser = dispenser;
+    this.streamHeight = streamHeight;
+    this.streamColour = streamColour;
     
     this.px = px;
     this.py = py;
@@ -88,18 +114,37 @@ class Faucet implements Clickable {
     g.rotate(PI/4);
     g.rotate(PI * rate / 100);
     
+    // tap
+    
     g.rect(-50, -8, 100, 16);
     g.rect(-8, -50, 16, 100);
     
     g.popMatrix();
     
+    drawStream(g);
+
+//    // Draw click area    
+//    g.pushMatrix();
+//    g.resetMatrix();
+//    g.stroke(#FF0000);
+//    g.noFill();
+//    g.rect(px, py, pw, ph);
+//    g.popMatrix();
+  }
+  
+  void drawStream(PGraphics g) {
     g.pushMatrix();
-    g.resetMatrix();
-    g.stroke(#FF0000);
-    g.noFill();
-    g.rect(px, py, pw, ph);
+    
+    if (rate > 0 && dispenser.remaining > 0) {
+      float percent = (float) rate / MAX_RATE;
+      g.noStroke();
+      g.fill(red(streamColour), green(streamColour), blue(streamColour), (int) (map(percent, 0, 1, 0.5, 1) * 255));
+      g.rect(179, 197, 30, streamHeight);
+    }
+    
     g.popMatrix();
   }
+
   
   void setRate(int newRate) {
     rate = newRate;
@@ -135,40 +180,112 @@ class Faucet implements Clickable {
   }
 }
 
-class Dial {
-  float x, y, r;
-  Dispenser dispenser;
+class Burner implements Clickable {
+  boolean on, keepWarm, cook;
   
-  int amount = 0;
-  
-  Dial(float x, float y, float r, Dispenser dispenser) {
-    this.x = x;
-    this.y = y;
-    this.r = r;
-    this.dispenser = dispenser;
+  Burner() {
+    keepWarmTextImage = loadImage("images/text-keepwarm.jpg");
+    cookTextImage = loadImage("images/text-cook.jpg");
+    onoffTextImage = loadImage("images/text-onoff.jpg");
   }
   
   void draw(PGraphics g) {
-    g.stroke(#000000);
-    g.ellipseMode(CENTER);
-    g.fill(200);
-    g.ellipse(x, y, r*2, r*2);
+    pushMatrix();
     
-    int cups = amount / 1000;
-    int frac = amount % 1000;
+    translate(135, 630);
     
-    float cupsX = x + sin((float) cups / 10 * PI * 2) * r;
-    float cupsY = y - cos((float) cups / 10 * PI * 2) * r;
+    // burner
     
-    g.strokeWeight(3);
-    g.stroke(#ff0000);
-    g.line(x, y, cupsX, cupsY);
+    g.stroke(#303030);
+    g.fill(#716869);
+    g.strokeWeight(5);
+    g.rect(0, 0, 400, 100);
     
-    float fracX = x + sin((float) frac / 1000 * PI * 2) * r;
-    float fracY = y - cos((float) frac / 1000 * PI * 2) * r;
+    // grill
     
-    g.strokeWeight(2);
-    g.stroke(#00ff00);
-    g.line(x, y, fracX, fracY);
+    g.noStroke();
+    g.fill(#303030);
+    g.rect(100, -30, 5, 30);
+    g.rect(150, -30, 5, 30);
+    g.rect(200, -30, 5, 30);
+    g.rect(250, -30, 5, 30);
+    g.rect(300, -30, 5, 30);
+    g.rect(100, -30, 200, 5);
+    
+    // flames
+    
+    
+    
+    g.strokeWeight(5);
+    g.stroke(#A0A0A0);
+    
+    // on/off button
+    
+    if (on) {
+      g.fill(#FF3333);
+    } else {
+      g.fill(#663333);
+    }
+    
+    g.image(onoffTextImage, 55, 20);
+    g.ellipse(100, 70, 30, 30);
+    
+    // cook button
+    
+    if (cook) {
+      g.fill(#FF3333);
+    } else {
+      g.fill(#663333);
+    }
+    
+    g.image(cookTextImage, 153, 18);
+    g.ellipse(200, 70, 30, 30);
+    
+    // keep warm
+    
+    if (keepWarm) {
+      g.fill(#FF3333);
+    } else {
+      g.fill(#663333);
+    }
+    
+    g.image(keepWarmTextImage, 250, 22);
+    g.ellipse(300, 70, 30, 30);
+    
+    popMatrix();
   }
+
+  boolean onMousePressed(int x, int y) {  
+    // on/off button
+    
+    if (220 <= x && x < 255 && 687 <= y && y < 717) {
+      on = !on;
+      return true;
+    }
+    
+    // cook button
+    
+    if (322 <= x && x < 352 && 687 <= y && y < 717) {
+      cook = !cook;
+      return true;
+    }
+    
+    // keep warm button
+    
+    if (418 <= x && x < 449 && 687 <= y && y < 717) {
+      keepWarm = !keepWarm;
+      return true;
+    }
+    
+    return false;
+  }
+
+  boolean onMouseDragged(int x, int y) {
+    return false;
+  }
+
+  boolean onMouseReleased(int x, int y) {
+    return false;
+  }
+
 }
