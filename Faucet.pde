@@ -11,6 +11,8 @@ PImage keepWarmTextImage;
 PImage cookTextImage;
 PImage onoffTextImage;
 
+PImage flameImage;
+
 class Dispenser {
   float x, y;
   String type;
@@ -20,15 +22,19 @@ class Dispenser {
   
   Faucet faucet;
   
+  RiceCookerScene rcScene;
+  
   int remaining = MAX_REMAINING;
+  int spill = 0;
   int amount = 0;
   
-  Dispenser(float x, float y, String type, int streamColour, int streamHeight, float scaleFactor, int px, int py, int pw, int ph, PImage contentsImage) {
+  Dispenser(float x, float y, String type, int streamColour, int streamHeight, float scaleFactor, int px, int py, int pw, int ph, PImage contentsImage, RiceCookerScene rcScene) {
     this.type = type;
     this.x = x;
     this.y = y;
     this.scaleFactor = scaleFactor;
     this.contentsImage = contentsImage;
+    this.rcScene = rcScene;
     
     faucet = new Faucet(x, y, 50, this, streamColour, streamHeight, px, py, pw, ph);
     
@@ -37,10 +43,16 @@ class Dispenser {
   
   void draw(PGraphics g) {
     if (faucet.rate > 0) {
-      int prevAmount = amount;
-      amount += faucet.rate;
+      int prevRemaining = remaining;
       remaining = max(remaining - faucet.rate, 0);
-      if (prevAmount != amount) {
+      
+      if (rcScene.lid.on) {
+        spill += prevRemaining - remaining;
+      } else {
+        amount += prevRemaining - remaining;
+      }
+      
+      if (prevRemaining - remaining != 0) {
         remask();
       }
     }
@@ -187,12 +199,22 @@ class Burner implements Clickable {
     keepWarmTextImage = loadImage("images/text-keepwarm.jpg");
     cookTextImage = loadImage("images/text-cook.jpg");
     onoffTextImage = loadImage("images/text-onoff.jpg");
+    
+    flameImage = loadImage("images/flame.png");
   }
   
   void draw(PGraphics g) {
     pushMatrix();
     
     translate(135, 630);
+    
+    // flames
+    
+    if (on && cook) {
+        for (int i = 110; i < 290; i += 30) {
+          g.image(flameImage, i, -65);
+        }
+    }
     
     // burner
     
@@ -212,9 +234,7 @@ class Burner implements Clickable {
     g.rect(300, -30, 5, 30);
     g.rect(100, -30, 200, 5);
     
-    // flames
-    
-    
+    // buttons
     
     g.strokeWeight(5);
     g.stroke(#A0A0A0);
@@ -232,7 +252,7 @@ class Burner implements Clickable {
     
     // cook button
     
-    if (cook) {
+    if (on && cook) {
       g.fill(#FF3333);
     } else {
       g.fill(#663333);
@@ -243,7 +263,7 @@ class Burner implements Clickable {
     
     // keep warm
     
-    if (keepWarm) {
+    if (on && keepWarm) {
       g.fill(#FF3333);
     } else {
       g.fill(#663333);
@@ -259,20 +279,25 @@ class Burner implements Clickable {
     // on/off button
     
     if (220 <= x && x < 255 && 687 <= y && y < 717) {
+      cook = false;
+      keepWarm = false;
       on = !on;
       return true;
     }
     
     // cook button
     
-    if (322 <= x && x < 352 && 687 <= y && y < 717) {
+    if (on && 322 <= x && x < 352 && 687 <= y && y < 717) {
       cook = !cook;
+      
+      sceneChange = true;
+      
       return true;
     }
     
     // keep warm button
     
-    if (418 <= x && x < 449 && 687 <= y && y < 717) {
+    if (on && 418 <= x && x < 449 && 687 <= y && y < 717) {
       keepWarm = !keepWarm;
       return true;
     }
@@ -288,4 +313,47 @@ class Burner implements Clickable {
     return false;
   }
 
+}
+
+class Lid implements Clickable {
+  PImage lidImage;
+  PImage lidRotImage;
+  
+  boolean on = false;
+  
+  int x = 165, y = 360;
+  int xrot = 500, yrot = 300;
+  
+  Lid() {
+    lidImage = loadImage("images/lid.png");
+    lidRotImage = loadImage("images/lidRot.png");
+  }
+  
+  void draw(PGraphics g) {
+    if (on) {
+      g.image(lidImage, x, y);
+    } else {
+      g.image(lidRotImage, xrot, yrot);
+    }
+  }
+  
+  boolean onMousePressed(int x, int y) {
+    if (on && this.x <= x && x < this.x + lidImage.width && this.y <= y && y < this.y + lidImage.height) {
+      on = !on;
+      return true;
+    } else if (!on && this.xrot <= x && x < this.xrot + lidRotImage.width && this.yrot <= y && y < this.yrot + lidRotImage.height) {
+      on = !on;
+      return true;
+    }
+    
+    return false;
+  }
+  
+  boolean onMouseDragged(int x, int y) {
+    return false;
+  }
+  
+  boolean onMouseReleased(int x, int y) {
+    return false;
+  }
 }
